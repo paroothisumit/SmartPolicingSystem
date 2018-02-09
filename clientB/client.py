@@ -122,7 +122,8 @@ def verify_server_address():
 
 
 server_address = input('Enter server address:port')
-
+if server_address == 'l':
+    server_address='localhost:7777'
 server_address = 'http://' + server_address + '/'
 verify_server_address()
 configuration = None

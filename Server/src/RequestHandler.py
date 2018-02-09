@@ -100,6 +100,12 @@ def get_image():
         #print('looping....')
     return send_file('uploads\\'+file_name, mimetype='image/jpg')
 
+@app.route('/get_all_surveillance_sites',methods=['GET'])
+def get_all_surveillance_sites():
+    return jsonify(dao.get_all_surveillance_sites())
+
+
 if __name__=='__main__':
     create_upload_folder()
+
     app.run(host='0.0.0.0',port=7777,debug=True)
