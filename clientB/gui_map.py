@@ -85,11 +85,13 @@ class Example(QWebView):
         for site in surveillance_sites:
             latitude=site['latitude']
             longitude=site['longitude']
-            self.add_marker(latitude,longitude)
+            site_id=site['id']
+            self.add_marker(latitude,longitude,site_id)
 
-    def add_marker(self,latitude,longitude):
+    def add_marker(self, latitude, longitude, site_id):
         frame=self.page().currentFrame();
-        frame.evaluateJavaScript('addMarker({0},{1})'.format(latitude,longitude))
+        frame.evaluateJavaScript('addSurveillanceSite({0},{1},{2})'.format(site_id, latitude,
+                                                                           longitude))
 
 def rock(server_address):
     app = QApplication(sys.argv)
