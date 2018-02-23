@@ -11,12 +11,17 @@ function intMap()
   });
 
 }
-function getPositionObject(lat,lng)
+function positionString(lat,lng)
+{
+  
+  return (lat.toFixed(8)).toString()+(lng.toFixed(8)).toString();
+   
+}
+function positionObject(lat,lng)
 {
   return {
     lat:lat,
     lng:lng
-
   };
 }
 function surveillanceSite(siteId,lat,lng)
@@ -29,8 +34,8 @@ function surveillanceSite(siteId,lat,lng)
   
   this.addMarker=function()
   {
-    console.log('New Marker');
-    var pos=getPositionObject(lat,lng);
+    
+    var pos=positionObject(lat,lng);
     outer_this.marker=new google.maps.Marker({
       position: pos,
       map: map
@@ -42,16 +47,31 @@ function surveillanceSite(siteId,lat,lng)
 function addSurveillanceSite(siteId,lat,lng)
 {
   var siteObject=new surveillanceSite(siteId,lat,lng);
+
   siteIDtoSiteObject[siteId]=siteObject;
-  positionToSiteObject[getPositionObject(lat,lng)]=siteObject;
+  positionToSiteObject.set(positionString(lat,lng),siteObject);
   siteObject.addMarker();
-
+  console.log(positionToSiteObject.get(positionString(lat,lng)));
+  
 }
-
-
+function alertHandler(siteId)
+{
+  console.log("Alert Handling javascript");
+  var siteObject=siteIDtoSiteObject[siteId];
+  siteObject.marker.setAnimation(google.maps.Animation.BOUNCE);
+}
+var infoWindow = new google.maps.InfoWindow({
+    content:''
+  });
 function onClick(arg)
 {
-  console.log(arg.latLng.lat());
-  console.log(positionToSiteObject[getPositionObject(arg.latLng.lat(),arg.latLng.lng())]);
+
+  //console.log(positionString(arg.latLng.lat(),arg.latLng.lng()))
+  var siteObject=positionToSiteObject.get(positionString(arg.latLng.lat(),arg.latLng.lng()));
+  
+  var contentString=(siteObject.siteId.toString());
+  infoWindow.setContent(contentString);
+  console.log('Info Window Created');
+  infoWindow.open(map,siteObject.marker);
 
 }

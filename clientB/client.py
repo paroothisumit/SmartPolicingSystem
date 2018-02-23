@@ -50,14 +50,16 @@ def check_new_alert():
             image_file_name = create_file_name(message["Time"], message["SourceID"], )
 
             response = requests.post(server_address + 'get_image', json={'file_name': image_file_name}, stream=True)
+            print(response.status_code)
             if response.status_code == 200:
                 with open('uploads//' + image_file_name, 'wb') as f:
                     for chunk in response.iter_content(1024 * 1024):
                         f.write(chunk)
 
-            img = Image.open('uploads//' + image_file_name)
-            img.show()
+                img = Image.open('uploads//' + image_file_name)
+                img.show()
             if configuration["site_id"] == '1':
+
                 gui_controller.new_alert(message)
             winsound.Beep(3000, 800)
         time.sleep(interval)

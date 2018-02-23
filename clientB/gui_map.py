@@ -1,52 +1,48 @@
-import sys,bridge,time
+import sys, bridge, time
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-
-
-import sys,os
+from PyQt5.Qt import QThread
+import sys, os
 
 from PyQt5 import QtCore, QtGui
 
 from PyQt5.QtCore import QUrl
-from PyQt5.QtWidgets import QDialog,QApplication,QWidget,QLineEdit
+from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QLineEdit
 from PyQt5.QtWebKitWidgets import QWebView
 
 
-
-
-class Example(QWebView):
-    def __init__(self,server_address):
+class WebView(QWebView):
+    def __init__(self, server_address):
         super().__init__()
-        self.server_address=server_address
-        self.grid=QGridLayout()
-        self.button = [None] * 100
-        self.new_alert= [None] * 100
-        self.alert_content = [None] * 100
+        self.server_address = server_address
         self.page().settings().setAttribute(self.settings().DeveloperExtrasEnabled, True)
         self.page().loadFinished.connect(self.loadingFinished)
         self.initUI()
-    def loadingFinished(self,bool):
+
+    def loadingFinished(self, bool):
         print('load finished')
         frame = self.page().currentFrame();
         print(frame)
-        lat=19.0760
-        lng=72.8777
+        lat = 19.0760
+        lng = 72.8777
 
         self.mark_sites()
 
-    def handle_new_alert(self,message_content):
-        id=message_content["SourceID"]
-        Time=message_content["Time"]
-        #Time=rectify_time_zone(Time)
+    @pyqtSlot(dict)
+    def handle_new_alert(self, message_content):
+        id = message_content["SourceID"]
+        time = message_content["Time"]
+        # Time=rectify_time_zone(Time)
 
-        activity=message_content["activity_recognized"]
-        location_description=message_content["location_description"]
-        self.alert_content[id]=[Time,activity,location_description]
-        self.activate_btn(id)
-        self.new_alert[id]=1
+        activity = message_content["activity_recognized"]
+        location_description = message_content["location_description"]
+        frame = self.page().currentFrame();
+        print("Sending control to javascript to handle alert")
+        #TODO the following line crashes because it is called from seperate thread...
+        frame.evaluateJavaScript('alertHandler({0})'.format(id))
+
 
     def initUI(self):
-
         # self.grid.addWidget(QPushButton('c'), 10, 11)
 
 
@@ -55,46 +51,30 @@ class Example(QWebView):
         self.load(url)
         self.show()
 
-
-    def normal_state(self, id):
-
-        self.new_alert[id] = 0
-        self.alert_content[id]=None
-        self.button[id].setStyleSheet("color: rgb(40,55,225);background-color:rgb(23,22,33);font-size:24px")
-        self.button[id].setEnabled(True)
-
-    def activate_btn(self, id):
-        self.button[id].setStyleSheet("color: rgb(222,223,225);background-color:rgb(255,20,0);font-size:24px")
-
-        # self.button[id].setStyleSheet("background-color: rgb(153,153,102)")
-        self.button[id].setEnabled(True)
-
-    def buttonClicked(self):
-
-        id=int(self.sender().text())
-
-        print(self.sender().text() + ' was pressed')
-        site_info=(bridge.get_client_info(id,self.server_address))
-        #self.dia=StatusDialogBox(site_info, id, None, self.alert_content[id])
-        print('Here')
-        self.dia.show()
-        self.normal_state(id)
-
     def mark_sites(self):
-        surveillance_sites=bridge.get_all_surveillance_sites(self.server_address)
+        surveillance_sites = bridge.get_all_surveillance_sites(self.server_address)
         for site in surveillance_sites:
-            latitude=site['latitude']
-            longitude=site['longitude']
-            site_id=site['id']
-            self.add_marker(latitude,longitude,site_id)
+            latitude = site['latitude']
+            longitude = site['longitude']
+            site_id = site['id']
+            self.add_marker(latitude, longitude, site_id)
+
 
     def add_marker(self, latitude, longitude, site_id):
-        frame=self.page().currentFrame();
+        frame = self.page().currentFrame();
         frame.evaluateJavaScript('addSurveillanceSite({0},{1},{2})'.format(site_id, latitude,
                                                                            longitude))
 
+    @pyqtSlot()
+    def test_function(self):
+        print('test function')
+
+
 def rock(server_address):
     app = QApplication(sys.argv)
-    ex=Example(server_address)
+    ex = WebView(server_address)
 
-    return ex,app
+    #ex.metaObject().invokeMethod(ex,'test_function',Qt.QueuedConnection)
+
+
+    return ex, app,QThread.currentThread()

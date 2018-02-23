@@ -1,9 +1,9 @@
-import os
+import os,time
 
 import errno
 from pathlib import Path
 
-from flask import Flask,jsonify,request,send_file,json
+from flask import Flask,jsonify,request,send_file,json,abort
 import dao
 
 app=Flask(__name__)
@@ -90,6 +90,7 @@ def get_site_info():
 @app.route('/get_image', methods=['POST'])
 def get_image():
     #print(request.files)
+    timeout=4
     request_dict=request.get_json()
     file_name=request_dict["file_name"]
     file_path='uploads\\'+file_name
@@ -97,7 +98,15 @@ def get_image():
     while file_name not in is_file_ready or is_file_ready[file_name]!=1:
         if Path(file_path).is_file():
             break
-        #print('looping....')
+        time.sleep(1)
+        timeout=timeout-1
+        if(timeout<0):
+            break
+
+
+    if timeout<0:
+        #image not found
+        abort(404)
     return send_file('uploads\\'+file_name, mimetype='image/jpg')
 
 @app.route('/get_all_surveillance_sites',methods=['GET'])

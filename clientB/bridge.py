@@ -9,8 +9,8 @@ def get_client_info(id,server_address):
 def get_all_surveillance_sites(server_address):
     print('Getting information for all surveillance sites')
     response=requests.get(server_address+'get_all_surveillance_sites');
-    print(response)
-    print(response.json())
+    #print(response)
+    #print(response.json())
     return response.json()
 # dummy
 # def get_client_info(id,server_address):
