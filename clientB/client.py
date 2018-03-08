@@ -9,6 +9,7 @@ import errno,time
 
 import winsound
 
+import pytz
 from PIL import Image
 
 
@@ -37,6 +38,14 @@ def create_file_name(Time_str,site_id):
     Time_str_conv=datetime.strftime(Time,'%Y_%m_%d_%H_%M_%S_')
     return Time_str_conv+str(site_id)+'.jpg'
 
+
+def rectify_time_zone(time_str):
+    time_str = str(time_str)
+
+    tz = pytz.timezone('Asia/Kolkata')
+    time_ = datetime.strptime(time_str, '%a, %d %b %Y %H:%M:%S %Z')
+    return str(time_.replace(tzinfo=tz))
+
 def check_new_alert():
     interval = 4
     last_checked = datetime.now()
@@ -46,8 +55,10 @@ def check_new_alert():
         last_checked = datetime.now()
 
         for message in response.json():
-            pprint.pprint(message)
             image_file_name = create_file_name(message["Time"], message["SourceID"], )
+            message["Time"]=rectify_time_zone(message["Time"])
+            pprint.pprint(message)
+
 
             response = requests.post(server_address + 'get_image', json={'file_name': image_file_name}, stream=True)
             print(response.status_code)

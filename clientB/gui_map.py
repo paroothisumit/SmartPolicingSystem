@@ -2,7 +2,7 @@ import sys, bridge, time
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import QThread
-import sys, os
+import sys, os, json
 
 from PyQt5 import QtCore, QtGui
 
@@ -38,8 +38,8 @@ class WebView(QWebView):
         location_description = message_content["location_description"]
         frame = self.page().currentFrame();
         print("Sending control to javascript to handle alert")
-        #TODO the following line crashes because it is called from seperate thread...
-        frame.evaluateJavaScript('alertHandler({0})'.format(id))
+
+        frame.evaluateJavaScript('alertHandler({0})'.format(json.dumps(message_content)))
 
 
     def initUI(self):
@@ -54,21 +54,12 @@ class WebView(QWebView):
     def mark_sites(self):
         surveillance_sites = bridge.get_all_surveillance_sites(self.server_address)
         for site in surveillance_sites:
-            latitude = site['latitude']
-            longitude = site['longitude']
-            site_id = site['id']
-            self.add_marker(latitude, longitude, site_id)
+            self.add_marker(site)
 
 
-    def add_marker(self, latitude, longitude, site_id):
+    def add_marker(self, surveillance_site):
         frame = self.page().currentFrame();
-        frame.evaluateJavaScript('addSurveillanceSite({0},{1},{2})'.format(site_id, latitude,
-                                                                           longitude))
-
-    @pyqtSlot()
-    def test_function(self):
-        print('test function')
-
+        frame.evaluateJavaScript('addSurveillanceSite({0})'.format(json.dumps(surveillance_site)))
 
 def rock(server_address):
     app = QApplication(sys.argv)

@@ -12,10 +12,3 @@ def get_all_surveillance_sites(server_address):
     #print(response)
     #print(response.json())
     return response.json()
-# dummy
-# def get_client_info(id,server_address):
-#     ret = dict()
-#     ret["description"] = "it is a description"
-#     ret["contact"] = "saar2119@gmail.com"
-#     ret["address"] = "Room no 55, Tilak, MNNIT"
-#     return ret

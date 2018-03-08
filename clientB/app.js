@@ -24,18 +24,22 @@ function positionObject(lat,lng)
     lng:lng
   };
 }
-function surveillanceSite(siteId,lat,lng)
+function surveillanceSite(siteInfo)
 {
-  this.siteId=siteId,
-  this.lat=lat,
-  this.lng=lng;
+  this.siteId=siteInfo.id,
+  this.lat=siteInfo.latitude,
+  this.lng=siteInfo.longitude;
+  this.contentString=undefined;
   this.marker=undefined;
+  this.description=siteInfo.description;
+  this.contact=siteInfo.contact;
+  this.address=siteInfo.address;
   var outer_this=this;
   
   this.addMarker=function()
   {
     
-    var pos=positionObject(lat,lng);
+    var pos=positionObject(siteInfo.latitude,siteInfo.longitude);
     outer_this.marker=new google.maps.Marker({
       position: pos,
       map: map
@@ -44,34 +48,38 @@ function surveillanceSite(siteId,lat,lng)
     outer_this.marker.addListener('click',onClick);
   }
 }
-function addSurveillanceSite(siteId,lat,lng)
+function addSurveillanceSite(surveillanceSite_)
 {
-  var siteObject=new surveillanceSite(siteId,lat,lng);
+  var siteObject=new surveillanceSite(surveillanceSite_);
 
-  siteIDtoSiteObject[siteId]=siteObject;
-  positionToSiteObject.set(positionString(lat,lng),siteObject);
+  siteIDtoSiteObject[siteObject.siteId]=siteObject;
+  positionToSiteObject.set(positionString(siteObject.lat,siteObject.lng),siteObject);
   siteObject.addMarker();
-  console.log(positionToSiteObject.get(positionString(lat,lng)));
+  //console.log(positionToSiteObject.get(positionString(lat,lng)));
   
 }
-function alertHandler(siteId)
+function alertHandler(message)
 {
   console.log("Alert Handling javascript");
-  var siteObject=siteIDtoSiteObject[siteId];
+  var siteObject=siteIDtoSiteObject[message.SourceID];
+  siteObject.contentString=getStyledString(siteObject,message);
+  
   siteObject.marker.setAnimation(google.maps.Animation.BOUNCE);
 }
 var infoWindow = new google.maps.InfoWindow({
     content:''
-  });
+});
 function onClick(arg)
 {
 
   //console.log(positionString(arg.latLng.lat(),arg.latLng.lng()))
   var siteObject=positionToSiteObject.get(positionString(arg.latLng.lat(),arg.latLng.lng()));
-  
-  var contentString=(siteObject.siteId.toString());
-  infoWindow.setContent(contentString);
+  if(siteObject.contentString == undefined)
+    siteObject.contentString=getStyledString(siteObject);
+  infoWindow.setContent(siteObject.contentString);
   console.log('Info Window Created');
   infoWindow.open(map,siteObject.marker);
+  siteObject.marker.setAnimation(null);
+  siteObject.contentString=undefined;
 
 }
