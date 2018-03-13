@@ -1,5 +1,7 @@
+var centroidX=0.0,centroidY=0.0;
 var map;
 intMap();
+var sitesCollection=[];
 var siteIDtoSiteObject=new Map();
 var positionToSiteObject=new Map();
 function intMap() 
@@ -42,22 +44,71 @@ function surveillanceSite(siteInfo)
     var pos=positionObject(siteInfo.latitude,siteInfo.longitude);
     outer_this.marker=new google.maps.Marker({
       position: pos,
-      map: map
+      map: map,
+      icon: 'markerImages/green-dot.png'
     });
     map.setCenter(pos);
     outer_this.marker.addListener('click',onClick);
+    
   }
 }
+surveillanceSite.count=0;
 function addSurveillanceSite(surveillanceSite_)
 {
   var siteObject=new surveillanceSite(surveillanceSite_);
-
+  sitesCollection.push(siteObject);
+  centroidX+=siteObject.lat;
+  centroidY+=siteObject.lng;
   siteIDtoSiteObject[siteObject.siteId]=siteObject;
   positionToSiteObject.set(positionString(siteObject.lat,siteObject.lng),siteObject);
   siteObject.addMarker();
+  surveillanceSite.count++;
+  readjustMap();
   //console.log(positionToSiteObject.get(positionString(lat,lng)));
-  
 }
+
+function readjustMap()
+{
+  map.setCenter(positionObject(centroidX/surveillanceSite.count,centroidY/surveillanceSite.count));
+  map.setZoom(getMaxZoom());
+}
+function getMaxZoom()
+{
+  var beg = 3,end = 20;
+  var itr=0;
+  while(itr<6)
+  {
+    var mid=((end+beg)/2);
+    
+    if(isZoomValid(mid))
+    {
+      beg=mid;
+    }
+    else
+      end=mid;
+    itr++;
+  }
+  return beg; 
+  
+  
+
+}
+var isZoomValid = function(zoom)
+{
+
+  map.setZoom((zoom));
+  for(var i=0;i<sitesCollection.length;i++)
+  {
+    
+    if(!map.getBounds().contains(sitesCollection[i].marker.getPosition()))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 function alertHandler(message)
 {
   console.log("Alert Handling javascript");
