@@ -8,4 +8,4 @@ Time=Time.replace(tzinfo=tz)
 
 
 #print(str(Time))
-dao.store_new_alert(26, "Suspicious Activity Mock", "Mock_location",str(Time) )
+dao.store_new_alert(24, "Suspicious Activity Mock", "Mock_location",str(Time) )

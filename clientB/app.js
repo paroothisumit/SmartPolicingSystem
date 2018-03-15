@@ -4,6 +4,12 @@ intMap();
 var sitesCollection=[];
 var siteIDtoSiteObject=new Map();
 var positionToSiteObject=new Map();
+var safeIcon='markerImages/green-dot.png';
+var alertIcon='markerImages/red-dot.png';
+var infoWindow = new google.maps.InfoWindow({
+  content:''
+});
+
 function intMap() 
 {
   var origin={lat:25,lng:75};
@@ -13,12 +19,14 @@ function intMap()
   });
 
 }
+
 function positionString(lat,lng)
 {
   
   return (lat.toFixed(8)).toString()+(lng.toFixed(8)).toString();
    
 }
+
 function positionObject(lat,lng)
 {
   return {
@@ -26,6 +34,7 @@ function positionObject(lat,lng)
     lng:lng
   };
 }
+
 function surveillanceSite(siteInfo)
 {
   this.siteId=siteInfo.id,
@@ -45,7 +54,7 @@ function surveillanceSite(siteInfo)
     outer_this.marker=new google.maps.Marker({
       position: pos,
       map: map,
-      icon: 'markerImages/green-dot.png'
+      icon: safeIcon
     });
     map.setCenter(pos);
     outer_this.marker.addListener('click',onClick);
@@ -53,6 +62,7 @@ function surveillanceSite(siteInfo)
   }
 }
 surveillanceSite.count=0;
+
 function addSurveillanceSite(surveillanceSite_)
 {
   var siteObject=new surveillanceSite(surveillanceSite_);
@@ -72,13 +82,29 @@ function readjustMap()
   map.setCenter(positionObject(centroidX/surveillanceSite.count,centroidY/surveillanceSite.count));
   map.setZoom(getMaxZoom());
 }
+
 function getMaxZoom()
 {
+  var isZoomValid = function(zoom)
+  {
+
+    map.setZoom((zoom));
+    for(var i=0;i<sitesCollection.length;i++)
+    {
+      
+      if(!map.getBounds().contains(sitesCollection[i].marker.getPosition()))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
   var beg = 3,end = 20;
   var itr=0;
   while(itr<6)
   {
-    var mid=((end+beg)/2);
+    var mid=Math.floor((end+beg)/2);
     
     if(isZoomValid(mid))
     {
@@ -90,22 +116,6 @@ function getMaxZoom()
   }
   return beg; 
   
-  
-
-}
-var isZoomValid = function(zoom)
-{
-
-  map.setZoom((zoom));
-  for(var i=0;i<sitesCollection.length;i++)
-  {
-    
-    if(!map.getBounds().contains(sitesCollection[i].marker.getPosition()))
-    {
-      return false;
-    }
-  }
-  return true;
 }
 
 
@@ -114,12 +124,18 @@ function alertHandler(message)
   console.log("Alert Handling javascript");
   var siteObject=siteIDtoSiteObject[message.SourceID];
   siteObject.contentString=getStyledString(siteObject,message);
-  
+  map.panTo(positionObject(siteObject.lat,siteObject.lng));
+  map.setZoom(15);
   siteObject.marker.setAnimation(google.maps.Animation.BOUNCE);
+  siteObject.marker.setIcon(alertIcon);
 }
-var infoWindow = new google.maps.InfoWindow({
-    content:''
-});
+
+
+infoWindow.addListener('closeclick',onInfoWindowClosed);
+function onInfoWindowClosed()
+{
+  readjustMap();
+}
 function onClick(arg)
 {
 
@@ -131,6 +147,8 @@ function onClick(arg)
   console.log('Info Window Created');
   infoWindow.open(map,siteObject.marker);
   siteObject.marker.setAnimation(null);
+  siteObject.marker.setIcon(safeIcon);
   siteObject.contentString=undefined;
+  
 
 }
