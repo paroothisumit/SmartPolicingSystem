@@ -15,7 +15,8 @@ function intMap()
   var origin={lat:25,lng:75};
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 8,
-    center: origin
+    center: origin,
+    fullscreenControl:false
   });
 
 }

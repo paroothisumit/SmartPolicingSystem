@@ -43,6 +43,7 @@ def fetch_settings(site_id):
     result_set = db_obj.query(query_string, (site_id,))
     if result_set.rowcount == 0:
         return None
+    #TODO:more columns have been added
     id, description, address, contact, nearest_node, is_prohibited = result_set.fetchone()
     config_settings = {'site_id': id, 'description': description, 'address': address,
                        'contact': contact, 'nearest_node': nearest_node,

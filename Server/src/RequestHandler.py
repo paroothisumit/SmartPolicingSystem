@@ -13,6 +13,7 @@ is_file_ready={}
 def hand_shake():
     return jsonify(True)
 
+
 @app.route('/register_clientb', methods=['POST'])
 def register_clientb():
 

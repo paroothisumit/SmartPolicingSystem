@@ -127,7 +127,7 @@ if __name__ == '__main__':
     cctv_sources = []
     cctv_descriptions = []
     initialize()
-    threading.Thread(target=fetch_settings).start()
+    #threading.Thread(target=fetch_settings).start()
     # print(cctv_sources)
     # exit(0)
     pool = Pool(processes=len(cctv_sources))
