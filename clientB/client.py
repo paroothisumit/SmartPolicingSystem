@@ -2,7 +2,7 @@ import json
 import os, requests, sys
 import pprint
 import threading
-from datetime import datetime, time
+from datetime import datetime, time,timedelta
 from pathlib import Path
 import gui_controller
 import errno,time
@@ -29,14 +29,17 @@ def is_server_address_correct():
 
 
 
-def create_file_name(Time_str,site_id):
+def create_file_name(Time_str,site_id,isVideo):
 
     Time_str=str(Time_str)
     print(Time_str)
 
     Time=datetime.strptime(Time_str,'%a, %d %b %Y %H:%M:%S %Z')
     Time_str_conv=datetime.strftime(Time,'%Y_%m_%d_%H_%M_%S_')
-    return Time_str_conv+str(site_id)+'.jpg'
+    file_extension='.jpg'
+    if isVideo:
+        file_extension='.mp4'
+    return Time_str_conv+str(site_id)+file_extension
 
 
 def rectify_time_zone(time_str):
@@ -50,29 +53,34 @@ def check_new_alert():
     interval = 4
     last_checked = datetime.now()
     while True:
-        response = requests.post(server_address + 'check_new_alert',
-                                 json={'site_id': configuration["site_id"], 'last_checked': str(last_checked)})
+        temp=last_checked
         last_checked = datetime.now()
 
+        response = requests.post(server_address + 'check_new_alert',
+                                 json={'site_id': configuration["site_id"], 'last_checked': str(
+                                     temp)})
+
+
         for message in response.json():
-            image_file_name = create_file_name(message["Time"], message["SourceID"], )
+            media_file_name = create_file_name(message["Time"], message["SourceID"],
+                                               message["activity_recognized"]=="Crowd Violence" )
             message["Time"]=rectify_time_zone(message["Time"])
             pprint.pprint(message)
 
 
-            response = requests.post(server_address + 'get_image', json={'file_name': image_file_name}, stream=True)
+            response = requests.post(server_address + 'get_image', json={'file_name': media_file_name}, stream=True)
             print(response.status_code)
             if response.status_code == 200:
-                with open('uploads//' + image_file_name, 'wb') as f:
+                with open('uploads//' + media_file_name, 'wb') as f:
                     for chunk in response.iter_content(1024 * 1024):
                         f.write(chunk)
-
-                img = Image.open('uploads//' + image_file_name)
-                img.show()
+                if media_file_name.endswith(".jpg"):
+                    img = Image.open('uploads//' + media_file_name)
+                    img.show()
             if configuration["site_id"] == '1':
 
-                gui_controller.new_alert(message)
-            winsound.Beep(3000, 800)
+                gui_controller.new_alert(message,media_file_name)
+            winsound.Beep(500, 800)
         time.sleep(interval)
 
 

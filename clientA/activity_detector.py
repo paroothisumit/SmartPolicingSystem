@@ -6,7 +6,7 @@ import imutils
 import winsound
 import numpy as np
 import multiprocessing
-
+import copy
 import argparse
 from imutils.object_detection import non_max_suppression
 import alert_raiser
@@ -44,44 +44,35 @@ def background_subtraction(previous_frame, frame_resized_grayscale, min_area):
 
 
 def violence_detect(cctv_info, queue):
-    #frame_buffer=np.copy(frame_buffer_)
-    cooldown=0
+    # frame_buffer=np.copy(frame_buffer_)
+    cooldown = 0
     while True:
-        frame_buffer=queue.get()
-        if frame_buffer=="kill":
+        frame_buffer = queue.get()
+        if frame_buffer == "kill":
             exit(0)
-        print("Queue size:  "+str(queue.qsize()))
-        if cooldown>0:
-            cooldown=cooldown-1
+        print("Queue size:  " + str(queue.qsize()))
+        if cooldown > 0:
+            cooldown = cooldown - 1
             continue
 
         if crowd_violence_detector.detect_violence(np.array(frame_buffer))[0] == 'Violence':
 
-            ii=0
-            for frame in frame_buffer:
-                ii=ii+1
-                cv2.imshow('ii'+str(ii),frame)
-            cv2.waitKey(0)
-
             print("*****************************************************")
             winsound.Beep(350, 190)
-            activity_recognized = "Violence Detected"
+            activity_recognized = "Crowd Violence"
             cctv_description = cctv_info['cctv_description']
             configuration = cctv_info['configuration']
             server_address = cctv_info['server_address']
             threading.Thread(target=alert_raiser.raise_alert,
                              args=[activity_recognized, cctv_description, configuration,
-                                   server_address, frame_buffer[0]]).start()
+                                   server_address, copy.deepcopy(frame_buffer)]).start()
             frame_buffer.clear()
-            cooldown=2
+            cooldown = 4
         else:
             print("NonViolence")
 
 
-
-
 def detect_activity(cctv_info):
-
     video_source = cctv_info['video_source']
     print('Video source:' + str(video_source))
     count = 0
@@ -95,31 +86,30 @@ def detect_activity(cctv_info):
     frame_count = 0
     frame_buffers = []
 
-
-    current_frame_buffer=0
+    current_frame_buffer = 0
     cooldown = 0
-    initial_time=time.time()
-    queue=multiprocessing.Queue()
-    p=multiprocessing.Process(target=violence_detect,args=[cctv_info,queue])
+    initial_time = time.time()
+    queue = multiprocessing.Queue()
+    p = multiprocessing.Process(target=violence_detect, args=[cctv_info, queue])
     p.start()
 
-    maximum_sequences=60
-    clip_size=15
+    maximum_sequences = 60
+    clip_size = 15
     for i in range(0, maximum_sequences):
         frame_buffers.append([])
     while True:
 
         starttime = time.time()
-        frame_buffer=frame_buffers[current_frame_buffer]
+        frame_buffer = frame_buffers[current_frame_buffer]
         previous_frame = frame_resized_grayscale
         grabbed, frame = camera.read()
         if not grabbed:
             break
         frame_resized = imutils.resize(frame, width=min(800, frame.shape[1]))
         cv2.imshow('cctv_footage' + str(video_source), frame_resized)
-        cv2.waitKey(30)
+        cv2.waitKey(50)
         frame_resized_grayscale = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
-        if len(frame_buffer)==clip_size:
+        if len(frame_buffer) == clip_size:
             frame_buffer.clear()
         if cooldown != 0:
             print("Cooling")
@@ -129,14 +119,14 @@ def detect_activity(cctv_info):
         frame_count = frame_count + 1
         if frame_count % 10 == 0 and len(frame_buffer) == 0:
             frame_buffer.append(frame)
-        if frame_count > 3 and frame_count%4==0 and len(frame_buffer) >= 1:
+        if frame_count > 3 and frame_count % 4 == 0 and len(frame_buffer) >= 1:
             frame_buffer.append(frame)
-        #print('Size of frame_buffer:    ' + str(len(frame_buffer)))
+        # print('Size of frame_buffer:    ' + str(len(frame_buffer)))
         if len(frame_buffer) == clip_size:
             queue.put(frame_buffer)
-            current_frame_buffer=(current_frame_buffer+1)%maximum_sequences
+            current_frame_buffer = (current_frame_buffer + 1) % maximum_sequences
             print(current_frame_buffer)
-            #print("Thread time: "+str(time.time()-t1))
+            # print("Thread time: "+str(time.time()-t1))
 
         if cctv_info['configuration']['is_prohibited'] == '0':
             continue
@@ -148,9 +138,12 @@ def detect_activity(cctv_info):
                 cctv_description = cctv_info['cctv_description']
                 configuration = cctv_info['configuration']
                 server_address = cctv_info['server_address']
-                threading.Thread(target=alert_raiser.raise_alert,args=[activity_recognized,
-                cctv_description,configuration,server_address,frame_processed]).start()
-                cooldown=10
+                threading.Thread(target=alert_raiser.raise_alert, args=[activity_recognized,
+                                                                        cctv_description,
+                                                                        configuration,
+                                                                        server_address,
+                                                                        frame_processed]).start()
+                cooldown = 20
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
                 break
@@ -160,7 +153,7 @@ def detect_activity(cctv_info):
             count = count + 1
             print("Number of frame skipped in the" + str(video_source) + "=" + str(count))
 
-    print("FPS: "+str(frame_count/(time.time()-initial_time)))
+    print("FPS: " + str(frame_count / (time.time() - initial_time)))
     camera.release()
     cv2.destroyAllWindows()
     queue.put("kill")

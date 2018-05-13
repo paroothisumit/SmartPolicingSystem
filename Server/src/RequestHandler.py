@@ -95,7 +95,7 @@ def get_image():
     request_dict=request.get_json()
     file_name=request_dict["file_name"]
     file_path='uploads\\'+file_name
-    print(file_name)
+    #print(file_name)
     while file_name not in is_file_ready or is_file_ready[file_name]!=1:
         if Path(file_path).is_file():
             break

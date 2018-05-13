@@ -120,11 +120,12 @@ function getMaxZoom()
 }
 
 
-function alertHandler(message)
+function alertHandler(message,media_file_name)
 {
   console.log("Alert Handling javascript");
+
   var siteObject=siteIDtoSiteObject[message.SourceID];
-  siteObject.contentString=getStyledString(siteObject,message);
+  siteObject.contentString=getStyledString(siteObject,message,media_file_name);
   map.panTo(positionObject(siteObject.lat,siteObject.lng));
   map.setZoom(15);
   siteObject.marker.setAnimation(google.maps.Animation.BOUNCE);
@@ -137,6 +138,17 @@ function onInfoWindowClosed()
 {
   readjustMap();
 }
+
+
+
+var toggleDisplay=function(media_file_name)
+{
+    console.log(media_file_name+"CSDc");
+    console.log("Media Button clicked");
+    console.log(obj.display_media);
+    obj.display_media(media_file_name);
+
+};
 function onClick(arg)
 {
 

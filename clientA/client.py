@@ -3,6 +3,7 @@ import os, requests, sys
 import pprint
 import threading
 from multiprocessing.pool import Pool
+from multiprocessing import freeze_support
 from pathlib import Path
 import XmlReaderWriter
 import errno
@@ -27,7 +28,8 @@ def verify_server_address():
     except Exception:
         print('Server cannot be reached')
         print('Application will now exit')
-        exit(1);
+        import sys
+        sys.exit(1)
 
 
 def register_client():
@@ -119,8 +121,10 @@ def initialize():
 
 
 if __name__ == '__main__':
+    freeze_support()
     server_address = input('Enter server address:port')
-
+    if 'l' == server_address:
+        server_address= "localhost:7777"
     server_address = 'http://' + server_address + '/'
     verify_server_address()
     configuration = None

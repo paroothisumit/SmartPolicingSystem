@@ -3,6 +3,9 @@ import sys
 import gui, gui_map
 from PyQt5.Qt import QMetaObject, Qt, Q_ARG
 
+
+
+
 import datetime
 
 ex = None
@@ -23,11 +26,10 @@ def gui_init(server_address):
 # control_gui(server_address)
 
 
-def new_alert(message_content):
-
+def new_alert(message_content, media_file_name):
     ex.moveToThread(gui_thread)
     QMetaObject.invokeMethod(ex, "handle_new_alert", Qt.QueuedConnection,
-                             Q_ARG(dict, message_content))
+                             Q_ARG(dict, message_content), Q_ARG(str, media_file_name))
 
 
     # ex.handle_new_alert(message_content)
