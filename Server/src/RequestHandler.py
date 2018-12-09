@@ -118,4 +118,4 @@ def get_all_surveillance_sites():
 if __name__=='__main__':
     create_upload_folder()
 
-    app.run(host='0.0.0.0',port=7777,debug=True)
+    app.run(host='0.0.0.0',port=7777)

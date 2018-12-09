@@ -7,7 +7,7 @@ class DB:
 
     def __init__(self):
 
-        self._db_connection = connector.connect(user='root',db='serverdb')
+        self._db_connection = connector.connect(user='root',db='serverdb',password='sumit2000',auth_plugin='mysql_native_password')
         self._db_cur = self._db_connection.cursor(buffered=True)
 
     def query(self, query, params):

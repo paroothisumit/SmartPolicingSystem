@@ -136,17 +136,17 @@ if __name__ == '__main__':
     # exit(0)
     pool = Pool(processes=len(cctv_sources))
 
-    i = 0
+    cctv_index = 0
     for cctv_source in cctv_sources:
         # if not i==len(cctv_sources)-1:
         # threading.Thread(target=activity_detection_trigger,args=['CCTV :'+cctv_descriptions[i], str(cctv_source)]).start()  # for each cctv specify source & location
         # else:
         #    activity_detection_trigger('CCTV :'+cctv_descriptions[i], str(cctv_source))
         # pool.apply_async(activity_detection_trigger,[cctv_descriptions[i],str(cctv_source)])
-        cctv_info = {'cctv_description': cctv_descriptions[i], 'video_source': str(cctv_source),
+        cctv_info = {'cctv_description': cctv_descriptions[cctv_index], 'video_source': str(cctv_source),
                      'configuration': configuration, 'server_address': server_address}
         Process(target=activity_detector.detect_activity, args=[cctv_info, ]).start()
-        i = i + 1
+        cctv_index = cctv_index + 1
 
-        print(i)
-        print('cc')
+        print(cctv_index)
+
