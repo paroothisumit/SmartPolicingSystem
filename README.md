@@ -75,7 +75,14 @@ _______________________
 * After the setup, GUI is provided in which all the clients are located in a map. Information of the can be known by 
 clicking the site location on the map.
 
-*Client B (Police station) periodically probes server if it has received any messages from Client A. Once, any message is
+* Client B periodically probes server if it has received any messages from Client A. Once, any message is
 received from particular site, the site location on the map turns red and alert is triggered.
 
-*After the alert is triggered, site information can be known by clicking the site location on the map.
+* After the alert is triggered, site information can be known by clicking the site location on the map.
+
+##### GUI - Complete System Monitoring
+
+![Normal State](ScreenCast/safe_demo.gif)
+
+![Alerted State](ScreenCast/danger.gif)
+
